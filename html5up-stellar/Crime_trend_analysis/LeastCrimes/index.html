@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3 Horizontal Bar Chart with Tooltips from CSV</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            width: auto;
+            height: auto;
+            padding: 10px;
+            font: 12px sans-serif bold;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div id="chart"></div>
+
+<script>
+    // Set dimensions and margins
+    const margin = { top: 50, right: 30, bottom: 40, left: 300 },
+          width = 900 - margin.left - margin.right,
+          height = 500 - margin.top - margin.bottom;
+
+    const svg = d3.select("#chart")
+      .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    
+    d3.csv("Least5Crimes.csv").then(function(data) {
+        //  X axis
+        const x = d3.scaleLinear()
+          .domain([0, d3.max(data, d =>160)])
+          .range([0, width]);
+        svg.append("g")
+          .attr("transform", `translate(0,${height})`)
+          .call(d3.axisBottom(x))
+          .style("font-size","13px")
+          .selectAll("text")
+            .style("text-anchor", "middle");
+
+
+
+         // Title
+         svg.append("text")
+            .attr("x", (width / 2))             
+            .attr("y", 0 - (margin.top / 6))
+            .attr("text-anchor", "middle")  
+            .style("font-size", "24px") 
+            .text("Least 5 crimes from 2018 to Present");
+
+           
+
+        // Y axis
+        const y = d3.scaleBand()
+          .range([0, height])
+          .domain(data.map(d => d.Type_Of_Crime))
+          .padding(0.4);
+          
+        svg.append("g")
+          .call(d3.axisLeft(y))
+          .style("font-size","13px");
+
+        // Tooltip
+        const tooltip = d3.select("#chart")
+          .append("div")
+          .style("opacity", 0)
+          .attr("class", "tooltip");
+
+        const mouseover = function(event, d) {
+            tooltip.style("opacity", 1);
+        };
+        const mousemove = function(event, d) {
+            tooltip.html(d.Type_Of_Crime + " : " + d.Count)
+              .style("left", (event.x)/2 + "px")
+              .style("top", (event.y)/2 - 30 + "px");
+        };
+        const mouseleave = function(event, d) {
+            tooltip.style("opacity", 0);
+        };
+
+        // Bars
+        svg.selectAll("mybar")
+          .data(data)
+          .join("rect")
+            .attr("x", 0)
+            .attr("y", d => y(d.Type_Of_Crime))
+            .attr("width", d => x(+d.Count))
+            .attr("height", y.bandwidth())
+            .attr("fill", "royalblue")
+            .on("mouseover", mouseover)
+            .on("mousemove", mousemove)
+            .on("mouseleave", mouseleave);
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Line Chart with Tooltips</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            width: auto;
+            height: auto;
+            padding: 8px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+<div class="tooltip"></div>
+<script>
+    d3.csv('Viz1.csv')
+        .then(function (data) {
+            data.forEach(function (d) {
+                d.Number_of_crimes = +d.Number_of_crimes;
+            });
+
+            const margin = {top: 40, right: 30, bottom: 40, left: 70},
+                  width = 960 - margin.left - margin.right,
+                  height = 500 - margin.top - margin.bottom;
+
+            const svg = d3.select("body").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const x = d3.scaleBand()
+                .domain(data.map(d => d.Year))
+                .range([0, width])
+                .padding(0.1);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => 160000)])
+                .range([height, 0]);
+
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll("text")
+                .style("font-size", "13px");
+
+            svg.append("g")
+                .call(d3.axisLeft(y))
+                .style("font-size", "13px");
+
+            const line = d3.line()
+                .x(d => x(d.Year) + x.bandwidth() / 2)
+                .y(d => y(d.Number_of_crimes));
+
+            svg.append("path")
+                .datum(data)
+                .attr("fill", "none")
+                .attr("stroke", "steelblue")
+                .attr("stroke-width", 2)
+                .attr("d", line);
+
+                   // Add Chart Title
+            svg.append("text")
+                .attr("x", (width / 2))             
+                .attr("y", 0 - (margin.top / 6))
+                .attr("text-anchor", "middle")  
+                .style("font-size", "24px") 
+                .text("Number of crimes per year");
+
+            // Tooltip element
+            const tooltip = d3.select(".tooltip");
+
+            // Circles for tooltip triggers
+            svg.selectAll(".dot")
+                .data(data)
+                .enter().append("circle")
+                .attr("class", "dot")
+                .attr("cx", d => x(d.Year) + x.bandwidth() / 2)
+                .attr("cy", d => y(d.Number_of_crimes))
+                .attr("r", 5)
+                .attr("fill", "red")
+                .on("mouseover", function(event, d) {
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    tooltip.html(`Year: ${d.Year}<br/>Crimes: ${d.Number_of_crimes}`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function(d) {
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
+        });
+</script>
+</body>
+</html>
