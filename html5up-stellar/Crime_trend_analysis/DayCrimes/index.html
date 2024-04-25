@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bubble Chart - Crimes by Day of Week</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  .tooltip {
+    position: absolute;
+    text-align: center;
+    padding: 6px;
+    font: 12px sans-serif;
+    background: white;
+    border: 1px solid #000;
+    border-radius: 8px;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  svg {
+    font: 10px sans-serif;
+  }
+
+</style>
+</head>
+<body>
+
+<script>
+// Data for the chart
+const data = [
+  { day: 'Monday', crimes: 118784 },
+  { day: 'Tuesday', crimes: 118572 },
+  { day: 'Wednesday', crimes: 125526 },
+  { day: 'Thursday', crimes: 120428 },
+  { day: 'Friday', crimes: 128788 },
+  { day: 'Saturday', crimes: 118321 },
+  { day: 'Sunday', crimes: 110452 }
+];
+
+
+const maxCrimeValue = d3.max(data, d => d.crimes);
+const maxCrimeDay = data.find(d => d.crimes === maxCrimeValue).day;
+
+
+const margin = {top: 40, right: 20, bottom: 30, left: 50},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+
+const svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          `translate(${margin.left},${margin.top})`);
+
+// scales
+const xScale = d3.scaleBand()
+    .range([0, width])
+    .domain(data.map(d => d.day))
+    .padding(1);
+
+const zScale = d3.scaleLinear()
+    .domain([0, maxCrimeValue])
+    .range([10, 50]); 
+
+// X-axis
+svg.append("g")
+    .attr("transform", `translate(0,${height})`)
+    .call(d3.axisBottom(xScale));
+
+// Tooltip
+const tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip");
+
+// bubbles
+svg.selectAll("bubble")
+    .data(data)
+    .enter().append("circle")
+    .attr("cx", d => xScale(d.day) + xScale.bandwidth() / 2) // Center the bubble 
+    .attr("cy", height / 2) // Center vertically
+    .attr("r", d => zScale(d.crimes))
+    .style("fill", d => d.day === maxCrimeDay ? "red" : "#69b3a2") //highest day bubble red
+    .style("opacity", "0.7")
+    .attr("stroke", "black")
+    .on("mouseover", function(event, d) {
+      tooltip.transition()
+        .duration(200)
+        .style("opacity", .9);
+      tooltip.html(`Crimes: ${d.crimes}`)
+        .style("left", (event.pageX) + "px")
+        .style("top", (event.pageY - 28) + "px");
+    })
+    .on("mouseout", function(d) {
+      tooltip.transition()
+        .duration(500)
+        .style("opacity", 0);
+    });
+
+// Title
+svg.append("text")
+    .attr("x", width / 2 )
+    .attr("y", 0 - (margin.top / 2))
+    .attr("text-anchor", "middle")
+    .style("font-size", "20px")
+    .style("text-decoration", "underline")
+    .text("Crimes by Day of the Week");
+
+
+
+
+</script>
+
+</body>
+</html>

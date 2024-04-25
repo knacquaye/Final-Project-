@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D3 Horizontal Bar Chart with Tooltips from CSV</title>
+    <title>D3 Scatterplot with Tooltips from CSV (Swapped Axes)</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         .tooltip {
@@ -27,7 +27,7 @@
 
 <script>
     // Set dimensions and margins
-    const margin = { top: 50, right: 30, bottom: 40, left: 300 },
+    const margin = { top: 50, right: 60, bottom: 90, left: 200 },
           width = 900 - margin.left - margin.right,
           height = 500 - margin.top - margin.bottom;
 
@@ -38,40 +38,39 @@
       .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    
+    // Loading data
     d3.csv("Least5Crimes.csv").then(function(data) {
-        //  X axis
-        const x = d3.scaleLinear()
-          .domain([0, d3.max(data, d =>160)])
-          .range([0, width]);
+        // Scales
+        const y = d3.scaleLinear()
+            .domain([0, 120])
+            .range([height, 0]);
+
         svg.append("g")
-          .attr("transform", `translate(0,${height})`)
-          .call(d3.axisBottom(x))
-          .style("font-size","13px")
-          .selectAll("text")
+            .call(d3.axisLeft(y));
+
+        svg.append("text")
+                .attr("text-anchor", "end")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -70 + 20)
+                .attr("x", -margin.top -50)
+                .text("Number of Crimes");
+
+        const x = d3.scaleBand()
+            .domain(data.map(d => d.Type_Of_Crime))
+            .range([0, width])
+            .padding(0.1);
+
+        svg.append("g")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x))
+            .selectAll("text")
             .style("text-anchor", "middle");
 
-
-
-         // Title
-         svg.append("text")
-            .attr("x", (width / 2))             
-            .attr("y", 0 - (margin.top / 6))
-            .attr("text-anchor", "middle")  
-            .style("font-size", "24px") 
-            .text("Least 5 crimes from 2018 to Present");
-
-           
-
-        // Y axis
-        const y = d3.scaleBand()
-          .range([0, height])
-          .domain(data.map(d => d.Type_Of_Crime))
-          .padding(0.4);
-          
-        svg.append("g")
-          .call(d3.axisLeft(y))
-          .style("font-size","13px");
+        svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("x", width / 2 + 10)
+                .attr("y", height + margin.bottom-40)
+                .text("Type of crime");
 
         // Tooltip
         const tooltip = d3.select("#chart")
@@ -84,21 +83,28 @@
         };
         const mousemove = function(event, d) {
             tooltip.html(d.Type_Of_Crime + " : " + d.Count)
-              .style("left", (event.x)/2 + "px")
-              .style("top", (event.y)/2 - 30 + "px");
+              .style("left", (event.x) + "px")
+              .style("top", (event.y) + "px");
         };
         const mouseleave = function(event, d) {
             tooltip.style("opacity", 0);
         };
 
-        // Bars
-        svg.selectAll("mybar")
+                     //Chart Title
+                     svg.append("text")
+                .attr("x", (width / 2))             
+                .attr("y", 0 - (margin.top / 4))
+                .attr("text-anchor", "middle")  
+                .style("font-size", "24px") 
+                .text(" Least 5 Crimes  ")
+
+        // Adding points
+        svg.selectAll("dot")
           .data(data)
-          .join("rect")
-            .attr("x", 0)
-            .attr("y", d => y(d.Type_Of_Crime))
-            .attr("width", d => x(+d.Count))
-            .attr("height", y.bandwidth())
+          .join("circle")
+            .attr("cx", d => x(d.Type_Of_Crime) + x.bandwidth() / 2)
+            .attr("cy", d => y(d.Count))
+            .attr("r", 5)
             .attr("fill", "royalblue")
             .on("mouseover", mouseover)
             .on("mousemove", mousemove)
