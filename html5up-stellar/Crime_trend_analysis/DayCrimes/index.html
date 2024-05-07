@@ -1,116 +1,156 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bubble Chart - Crimes by Day of Week</title>
-<script src="https://d3js.org/d3.v7.min.js"></script>
-<style>
-  .tooltip {
-    position: absolute;
-    text-align: center;
-    padding: 6px;
-    font: 12px sans-serif;
-    background: white;
-    border: 1px solid #000;
-    border-radius: 8px;
-    pointer-events: none;
-    opacity: 0;
-  }
-
-  svg {
-    font: 10px sans-serif;
-  }
-
-</style>
+    <title>SVG Heatmap Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: "Arial", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .heatmap text {
+            font-size: 12px;
+            fill: black; /* Ensuring the text is readable */
+        }
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: none;
+            shape-rendering: crispEdges;
+        }
+        .axis text {
+            font-family: 'Heletica', sans-serif;
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
+    <svg class="heatmap" width="800" height="400"></svg>
+    <script>
+        var data = [
+            { day: 'Monday', type: 'Larceny Theft', value: 35269 },
+            { day: 'Tuesday', type: 'Larceny Theft', value: 33416 },
+            { day: 'Wednesday', type: 'Larceny Theft', value: 36135 },
+            { day: 'Thursday', type: 'Larceny Theft', value: 34894 },
+            { day: 'Friday', type: 'Larceny Theft', value: 40116 },
+            { day: 'Saturday', type: 'Larceny Theft', value: 37982 },
+            { day: 'Sunday', type: 'Larceny Theft', value: 35118 },
+            { day: 'Monday', type: 'Other Miscellaneous', value: 7800 },
+            { day: 'Tuesday', type: 'Other Miscellaneous', value: 7898 },
+            { day: 'Wednesday', type: 'Other Miscellaneous', value: 8868 },
+            { day: 'Thursday', type: 'Other Miscellaneous', value: 8307 },
+            { day: 'Friday', type: 'Other Miscellaneous', value: 8357 },
+            { day: 'Saturday', type: 'Other Miscellaneous', value: 7847 },
+            { day: 'Sunday', type: 'Other Miscellaneous', value: 7620 },
+            { day: 'Monday', type: 'Malicious Mischief', value: 7979 },
+            { day: 'Tuesday', type: 'Malicious Mischief', value: 7721 },
+            { day: 'Wednesday', type: 'Malicious Mischief', value: 8098 },
+            { day: 'Thursday', type: 'Malicious Mischief', value: 7735 },
+            { day: 'Friday', type: 'Malicious Mischief', value: 8725 },
+            { day: 'Saturday', type: 'Malicious Mischief', value: 8477 },
+            { day: 'Sunday', type: 'Malicious Mischief', value: 7905 },
+            { day: 'Monday', type: 'Assault', value: 7067 },
+            { day: 'Tuesday', type: 'Assault', value: 6894 },
+            { day: 'Wednesday', type: 'Assault', value: 7078 },
+            { day: 'Thursday', type: 'Assault', value: 7151 },
+            { day: 'Friday', type: 'Assault', value: 7597 },
+            { day: 'Saturday', type: 'Assault', value: 7866 },
+            { day: 'Sunday', type: 'Assault', value: 7445 },
+            { day: 'Monday', type: 'Non-Criminal', value: 7024 },
+            { day: 'Tuesday', type: 'Non-Criminal', value: 6986 },
+            { day: 'Wednesday', type: 'Non-Criminal', value: 7467 },
+            { day: 'Thursday', type: 'Non-Criminal', value: 7203 },
+            { day: 'Friday', type: 'Non-Criminal', value: 7174 },
+            { day: 'Saturday', type: 'Non-Criminal', value: 6569 },
+            { day: 'Sunday', type: 'Non-Criminal', value: 6555 }
+        ];
 
-<script>
-// Data for the chart
-const data = [
-  { day: 'Monday', crimes: 118784 },
-  { day: 'Tuesday', crimes: 118572 },
-  { day: 'Wednesday', crimes: 125526 },
-  { day: 'Thursday', crimes: 120428 },
-  { day: 'Friday', crimes: 128788 },
-  { day: 'Saturday', crimes: 118321 },
-  { day: 'Sunday', crimes: 110452 }
-];
+        var svg = d3.select(".heatmap"),
+            margin = { top: 40, right: 300, bottom: 60, left: 155 },
+            width = 1100 - margin.left - margin.right,
+            height = +svg.attr("height") - margin.top - margin.bottom,
+            g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
+            
 
-const maxCrimeValue = d3.max(data, d => d.crimes);
-const maxCrimeDay = data.find(d => d.crimes === maxCrimeValue).day;
+        var x = d3.scaleBand().rangeRound([0, width]).padding(0.01),
+            y = d3.scaleBand().rangeRound([0, height]).padding(0.01),
+            colorScale = d3.scaleSequential(d3.interpolatePurples).domain([0, d3.max(data, d => d.value)]);
 
+        var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            types = ['Larceny Theft', 'Other Miscellaneous', 'Malicious Mischief', 'Assault', 'Non-Criminal'];
 
-const margin = {top: 40, right: 20, bottom: 30, left: 50},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+        x.domain(days);
+        y.domain(types);
 
+        // Add x-axis at the top
+        g.append("g")
+         .attr("class", "x axis")
+         .attr("transform", `translate(0,${-10})`)
+         .call(d3.axisTop(x));
 
-const svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform",
-          `translate(${margin.left},${margin.top})`);
+        // Add y-axis on the left
+        g.append("g")
+         .attr("class", "y axis")
+         .call(d3.axisLeft(y));
 
-// scales
-const xScale = d3.scaleBand()
-    .range([0, width])
-    .domain(data.map(d => d.day))
-    .padding(1);
-
-const zScale = d3.scaleLinear()
-    .domain([0, maxCrimeValue])
-    .range([5, 30]); 
-
-// X-axis
-svg.append("g")
-    .attr("transform", `translate(0,${height})`)
-    .call(d3.axisBottom(xScale));
-
-// Tooltip
-const tooltip = d3.select("body").append("div")
-    .attr("class", "tooltip");
-
-// bubbles
-svg.selectAll("bubble")
-    .data(data)
-    .enter().append("circle")
-    .attr("cx", d => xScale(d.day) + xScale.bandwidth() / 2) // Center the bubble 
-    .attr("cy", height / 2) // Center vertically
-    .attr("r", d => d.day === "Friday" ? 50 : zScale(d.crimes))
-    .style("fill", d => d.day === maxCrimeDay ? "red" : "#69b3a2") //highest day bubble red
-    .style("opacity", "0.7")
-    .attr("stroke", "black")
-    .on("mouseover", function(event, d) {
-      tooltip.transition()
-        .duration(200)
-        .style("opacity", .9);
-      tooltip.html(`Crimes: ${d.crimes}`)
-        .style("left", (event.pageX) + "px")
-        .style("top", (event.pageY - 28) + "px");
-    })
-    .on("mouseout", function(d) {
-      tooltip.transition()
-        .duration(500)
-        .style("opacity", 0);
-    });
-
-// Title
-svg.append("text")
-    .attr("x", width / 2 )
-    .attr("y", 0 - (margin.top / 2))
-    .attr("text-anchor", "middle")
-    .style("font-size", "20px")
-    .style("text-decoration", "underline")
-    .text("Crime Rate by Day of the Week");
+        // Draw the rectangles
+        g.selectAll(".cell")
+            .data(data)
+            .enter().append("rect")
+            .attr("x", d => x(d.day))
+            .attr("y", d => y(d.type))
+            .attr("width", x.bandwidth())
+            .attr("height", y.bandwidth())
+            .attr("fill", d => colorScale(d.value));
 
 
+        var legendWidth = 300;  // Width of the legend
+        var legendHeight = 20;  // Height of the legend bar
 
+        // Append a gradient legend
+        var legendSvg = svg.append("g")
+            .attr("class", "legendLinear")
+            .attr("transform", "translate(" + (width - legendWidth - 50) + "," + (height + margin.top + 20) + ")");
 
-</script>
+        var defs = svg.append("defs");
+        var linearGradient = defs.append("linearGradient")
+            .attr("id", "linear-gradient");
 
+        // Horizontal gradient
+        linearGradient.selectAll("stop")
+            .data(colorScale.range().map(function(d, i) {
+                return {
+                    offset: i / (colorScale.range().length - 1),
+                    color: d
+                };
+            }))
+            .enter().append("stop")
+            .attr("offset", function(d) { return d.offset; })
+            .attr("stop-color", function(d) { return d.color; });
+
+        legendSvg.append("rect")
+            .attr("width", legendWidth)
+            .attr("height", legendHeight)
+            .style("fill", "url(#linear-gradient)");
+
+        // Add legend scale
+        var legendScale = d3.scaleLinear()
+            .domain([0, maxValue])
+            .range([0, legendWidth]);
+
+        var legendAxis = d3.axisBottom(legendScale)
+        .tickValues([100, 1000, 3000, 5000, 7000, 10000])  // Set specific tick values
+        .tickFormat(d3.format("~s"));  // Format for readabili
+        legendSvg.append("g")
+            .attr("class", "legend axis")
+            .attr("transform", "translate(0," + legendHeight + ")")
+            .call(legendAxis);
+
+    </script>
 </body>
 </html>

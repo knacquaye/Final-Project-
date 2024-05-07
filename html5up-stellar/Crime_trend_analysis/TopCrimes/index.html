@@ -24,83 +24,90 @@
 <body>
 
 <div id="chart"></div>
-
 <script>
-    // Set dimensions and margins
-    const margin = { top: 50, right: 30, bottom: 60, left: 200 },
-          width = 900 - margin.left - margin.right,
-          height = 500 - margin.top - margin.bottom;
+  // Set dimensions and margins
+  const margin = { top: 40, right: 30, bottom: 60, left: 150 },
+        width = 900 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
 
-    const svg = d3.select("#chart")
-      .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
+  const svg = d3.select("#chart")
+    .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    d3.csv("Top5Crimes.csv").then(function(data) {
-        // X axis
-        const x = d3.scaleLinear()
-          .domain([0, 260000])
-          .range([0, width]);
-        svg.append("g")
-          .attr("transform", `translate(0,${height})`)
-          .call(d3.axisBottom(x).tickFormat(d => `${d/1000}k`))
-          .style("font-size","13px");
-          svg.append("text")
-                .attr("text-anchor", "end")
-                .attr("x", width / 2 + margin.left -150)
-                .attr("y", height + margin.bottom)
-                .text("Number Of Crimes");
+  d3.csv("Top5Crimes.csv").then(function(data) {
+      // X axis
+      const x = d3.scaleLinear()
+        .domain([0, 260000])
+        .range([0, width]);
 
-        // Title
-        svg.append("text")
-            .attr("x", (width / 2))             
-            .attr("y", 0 - (margin.top / 6))
-            .attr("text-anchor", "middle")  
-            .style("font-size", "24px") 
-            .text("Top 5 crimes from 2018 to Present");
 
-        // Y axis
-        const y = d3.scaleBand()
-          .range([0, height])
-          .domain(data.map(d => d.Type_Of_Crime))
-          .padding(0.4);
-        svg.append("g")
-          .call(d3.axisLeft(y))
-          .style("font-size","13px");
+      svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x).tickFormat(d => `${d/1000}k`))
+        .style("font-style", "Calibri")
+        .style("font-size", "14px");
 
-        // Tooltip
-        const tooltip = d3.select("#chart")
-          .append("div")
-          .style("opacity", 0)
-          .attr("class", "tooltip");
+      // Add x-axis title
+      svg.append("text")
+              .attr("text-anchor", "middle")
+              .attr("x", width / 2)
+              .attr("y", height + margin.bottom - 3)
+              .style("font-size", "16px")
+              .style("font-family", "Helvetica")
+              .text("Number Of Crimes");
 
-        const mouseover = function(event, d) {
-            tooltip.style("opacity", 1);
-        };
-        const mousemove = function(event, d) {
-            tooltip.html(d.Type_Of_Crime + " : " + d.Count)
-              .style("left", (event.x)/2 + "px")
-              .style("top", (event.y)/2 - 30 + "px");
-        };
-        const mouseleave = function(event, d) {
-            tooltip.style("opacity", 0);
-        };
+      // Y axis
+      const y = d3.scaleBand()
+        .range([0, height])
+        .domain(data.map(d => d.Type_Of_Crime))
+        .padding(0.4);
 
-        // Bars
-        svg.selectAll("mybar")
-          .data(data)
-          .join("rect")
-            .attr("x", 0)
-            .attr("y", d => y(d.Type_Of_Crime))
-            .attr("width", d => x(+d.Count))
-            .attr("height", y.bandwidth())
-            .attr("fill", "royalblue")
-            .on("mouseover", mouseover)
-            .on("mousemove", mousemove)
-            .on("mouseleave", mouseleave);
-    });
+      svg.append("g")
+        .call(d3.axisLeft(y))
+        .style("font-style", "Helvetica")
+        .style("font-size", "14px")
+        .select(".domain").remove();
+
+      // Tooltip
+      const tooltip = d3.select("#chart")
+        .append("div")
+        .style("opacity", 0)
+        .attr("class", "tooltip");
+
+        const mouseover = function(event, d, i) {
+        tooltip.style("opacity", 1);
+        d3.select(this).attr("fill", "red");  // Change to red on mouseover
+    };
+
+    const mousemove = function(event, d) {
+        tooltip.html(d.Type_Of_Crime + " : " + d3.format(",")(d.Count))
+            .style("left", (event.x + 10) + "px")
+            .style("top", (event.y - 10) + "px"); 
+    };
+    const mouseleave = function(event, d, i) {
+      d3.select(this).attr("fill", i === 0 ? "purple" : "#d7b5d8");
+        tooltip.style("opacity", 0);
+    };
+
+      // Bars with transition
+      svg.selectAll("mybar")
+      .data(data)
+      .join("rect")
+        .attr("x", 0)
+        .attr("y", d => y(d.Type_Of_Crime))
+        .attr("width", 0)  // Initialize width at 0 for animation
+        .attr("height", y.bandwidth())
+        .attr("fill", (d, i) => i === 0 ? "#7a0177" : "#d7b5d8")
+        .on("mouseover", mouseover)
+        .on("mousemove", mousemove)
+        .on("mouseleave", mouseleave)
+      .transition()  
+        .duration(3000)  
+        .attr("width", d => x(d.Count));  // Anim  // Animate to the final width based on data
+  });
 </script>
 
 </body>

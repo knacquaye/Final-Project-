@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Line Chart with Tooltips</title>
+    <title>Line Chart</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         .tooltip {
@@ -51,35 +51,68 @@
             svg.append("g")
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(x))
+                // .selectAll("path, line")
+                // .style("stroke-width", "1")
                 .selectAll("text")
-                .style("font-size", "13px");
+                .style("font-style", "Calibri")
+                .style("font-size", "14px");
 
-            svg.append("g")
-                .call(d3.axisLeft(y))
-                .style("font-size", "13px");
+            // svg.append("g")
+            //     .call(d3.axisLeft(y))
+            //     .style("stroke-width", "1")
+            //     .style("font-size", "15px");
 
+            // Define the y-axis with grid lines
+            const yAxis = d3.axisLeft(y)
+                .tickSize(-width)  // Extend the ticks across the full width of the graph
+                .tickPadding(10);  // Adjust padding to ensure labels don't collide with the grid lines
+
+            // Add the y-axis with the grid lines
+             svg.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+                .selectAll("text")
+                .style("font-size", "14px");
+
+            // Optionally, customize the grid line style
+                svg.selectAll(".y.axis .tick line")
+                .attr("stroke", "#ddd")  // Set the color of the grid lines
+                svg.select(".y.axis .domain")
+                .attr("stroke-width", 0);
+
+            //Line 
             const line = d3.line()
                 .x(d => x(d.Year) + x.bandwidth() / 2)
                 .y(d => y(d.Number_of_crimes));
 
-            svg.append("path")
-                .datum(data)
-                .attr("fill", "none")
-                .attr("stroke", "steelblue")
-                .attr("stroke-width", 2)
-                .attr("d", line);
 
-                   // Add Chart Title
-            svg.append("text")
-                .attr("x", (width / 2))             
-                .attr("y", 0 - (margin.top / 6))
-                .attr("text-anchor", "middle")  
-                .style("font-size", "24px") 
-                .text("Number of crimes per year");
+            // Find the index where the year is 2023 to create a break
+             const breakIndex = data.findIndex(d => d.Year === "2023");
 
+            // Draw the line up to 2023
+            if (breakIndex > 0) {
+                svg.append("path")
+                    .datum(data.slice(0, breakIndex + 1))  // Include the point at 2023 to complete the segment
+                    .attr("fill", "none")
+                    .attr("stroke", "#8856a7")
+                    .attr("stroke-width", 2)
+                    .attr("d", line);
+            }
+
+            // Draw the line from 2023 to 2024 as dashed
+            if (breakIndex > -1 && breakIndex + 1 < data.length) {
+                svg.append("path")
+                    .datum(data.slice(breakIndex, breakIndex + 2))  // Include just 2023 and 2024
+                    .attr("fill", "none")
+                    .attr("stroke", "#8856a7")  // Different color to highlight, or use same 'steelblue' as needed
+                    .attr("stroke-width", 2)
+                    .attr("stroke-dasharray", "5,5")
+                    .attr("d", line);
+            }
+
+     
             // Tooltip element
             const tooltip = d3.select(".tooltip");
-
             // Circles for tooltip triggers
             svg.selectAll(".dot")
                 .data(data)
@@ -88,21 +121,28 @@
                 .attr("cx", d => x(d.Year) + x.bandwidth() / 2)
                 .attr("cy", d => y(d.Number_of_crimes))
                 .attr("r", 5)
-                .attr("fill", "red")
+                .attr("fill", "#8856a7")
                 .on("mouseover", function(event, d) {
+                    d3.select(this).attr("fill", "red"); 
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", .9);
-                    tooltip.html(`Year: ${d.Year}<br/>Crimes: ${d.Number_of_crimes}`)
+                        tooltip.html(`Year: ${d.Year}<br/>Crimes: ${d3.format(",")(d.Number_of_crimes)}`)
                         .style("left", (event.pageX + 10) + "px")
                         .style("top", (event.pageY - 28) + "px");
                 })
                 .on("mouseout", function(d) {
+                    d3.select(this).attr("fill", "#8856a7");
                     tooltip.transition()
                         .duration(500)
-                        .style("opacity", 0);
+                        .style("opacity", 0)
+                       
+
                 });
+                
+
         });
+        
 </script>
 </body>
 </html>
