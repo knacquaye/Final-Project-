@@ -18,6 +18,16 @@
             pointer-events: none;
             opacity: 0;
         }
+        .y.axis-label {
+        fill: grey; /* Color of the text */
+        font-size: 18px; /* Size of the font */
+        font-family: 'Helvetica', sans-serif; /* Font family */
+        }
+        .x.axis-label {
+        fill: grey; /* Color of the text */
+        font-size: 18px; /* Size of the font */
+        font-family: 'Helvetica', sans-serif; /* Font family */
+        }
     </style>
 </head>
 <body>
@@ -29,7 +39,7 @@
                 d.Number_of_crimes = +d.Number_of_crimes;
             });
 
-            const margin = {top: 40, right: 30, bottom: 40, left: 70},
+            const margin = {top: 40, right: 30, bottom: 70, left: 120},
                   width = 960 - margin.left - margin.right,
                   height = 500 - margin.top - margin.bottom;
 
@@ -54,8 +64,17 @@
                 // .selectAll("path, line")
                 // .style("stroke-width", "1")
                 .selectAll("text")
-                .style("font-style", "Calibri")
+                .style("font-style", "Helvetica")
                 .style("font-size", "14px");
+
+            // Add x-axis label
+            svg.append("text")
+                .attr("class", "x axis-label")
+                .attr("text-anchor", "middle")
+                .attr("x", width / 2) // Center the label by setting x to half of width
+                .attr("y", height + 50) // Position below the x-axis, adjust spacing as needed
+                .text("Year"); // The text of your label
+
 
             // svg.append("g")
             //     .call(d3.axisLeft(y))
@@ -72,7 +91,20 @@
                 .attr("class", "y axis")
                 .call(yAxis)
                 .selectAll("text")
+                .style("font-style", "Helvetica")
                 .style("font-size", "14px");
+
+            // Add y-axis label
+            svg.append("text")
+                .attr("class", "y axis-label")
+                .attr("text-anchor", "middle")
+                .attr("y", -100) // Position the y-axis label correctly
+                .attr("x", -height / 2) // Center the label by setting x to half of height
+                .attr("dy", ".75em")
+                .attr("transform", "rotate(-90)") // Rotate the label by -90 degrees
+                // .style("font-style", "Arial")
+                // .style("font-size", "19px")
+                .text("Number of Crimes"); // The text of your label
 
             // Optionally, customize the grid line style
                 svg.selectAll(".y.axis .tick line")
@@ -128,8 +160,8 @@
                         .duration(200)
                         .style("opacity", .9);
                         tooltip.html(`Year: ${d.Year}<br/>Crimes: ${d3.format(",")(d.Number_of_crimes)}`)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px");
+                        .style("left", (event.layerX + 10) + "px")
+                        .style("top", (event.layerY - 28) + "px");
                 })
                 .on("mouseout", function(d) {
                     d3.select(this).attr("fill", "#8856a7");

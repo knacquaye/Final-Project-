@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Treemap Visualization</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        body {
+            font-family: "Arial", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .treemap svg {
+            font-size: 14px; /* Increased font size */
+            font-family: "Helvetica", sans-serif;
+        }
+        .tooltip {
+            position: absolute;
+            opacity: 0;
+            background-color: white;
+            border: solid 1px #000;
+            padding: 5px;
+            border-radius: 5px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="treemap" style="width:1100px; height: 700px;"></div>
+    <div class="tooltip"></div>
+    <script>
+
+               // Data from your CSV
+               var data = [
+            
+            { District: "Central", Total_Crimes: 249823557 },
+            { District: "Northern", Total_Crimes: 229062163 },
+            { District: "Mission", Total_Crimes: 209372585 },
+            { District: "Southern", Total_Crimes: 200402574 },
+            { District: "Tenderloin", Total_Crimes: 165629692 },
+            { District: "Bayview", Total_Crimes: 150146265 },
+            { District: "Ingleside", Total_Crimes: 130470468 },
+            { District: "Taraval", Total_Crimes: 120224101 },
+            { District: "Richmond", Total_Crimes: 105757386 },
+            { District: "Park", Total_Crimes: 76976242 },
+            { District: "Out of SF", Total_Crimes: 52450687 },
+            
+           
+        ];
+
+ 
+
+        var svg = d3.select(".treemap").append("svg")
+                    .attr("width", 960)
+                    .attr("height", 600),
+            width = svg.attr("width"),
+            height = svg.attr("height"),
+            format = d3.format(",d");
+
+        var color = d3.scaleThreshold()
+            .domain([50000000, 100000000, 150000000, 200000000, 250000000])
+            .range(["#bd0026", "#edf8b1", "#7fcdbb", "#ccebc5", "#41B7C4"]);
+
+        var treemap = d3.treemap()
+                        .size([width, height])
+                        .padding(1)
+                        .round(true);
+
+        var root = d3.hierarchy({ children: data })
+                     .sum(d => d.Total_Crimes)
+                     .sort((a, b) => b.Total_Crimes - a.Total_Crimes);
+
+        treemap(root);
+
+        var leaf = svg.selectAll("g")
+                      .data(root.leaves())
+                      .join("g")
+                      .attr("transform", d => `translate(${d.x0},${d.y0})`);
+
+        leaf.append("rect")
+            .attr("id", d => (d.leafUid = "leaf" + d.data.District))
+            .attr("width", d => d.x1 - d.x0)
+            .attr("height", d => d.y1 - d.y0)
+            .attr("fill", d => color(d.data.Total_Crimes));
+
+        leaf.append("clipPath")
+            .attr("id", d => (d.clipUid = "clip" + d.data.District))
+            .append("use")
+            .attr("xlink:href", d => d.leafUid.href);
+
+        var tooltip = d3.select(".tooltip");
+
+        leaf.append("text")
+            .attr("clip-path", d => d.clipUid)
+            .selectAll("tspan")
+            .data(d => d.data.District.split(/(?=[A-Z][^A-Z])/g))
+            .join("tspan")
+            .attr("x", 3)
+            .attr("y", (d, i) => `${i * 1.1 + 1}em`)
+            .text(d => d);
+
+        leaf.append("title")
+            .text(d => `${d.data.District}\n${format(d.data.Total_Crimes)}`);
+
+        // Handling mouseover for tooltip
+        leaf.on("mouseover", function(event, d) {
+            tooltip.style("opacity", 1)
+                   .html(`District: ${d.data.District}<br>Total Crimes: ${format(d.data.Total_Crimes)}`)
+                   .style("left", (event.pageX + 10) + "px")
+                   .style("top", (event.pageY - 10) + "px");
+        })
+        .on("mousemove", function(event) {
+            tooltip.style("left", (event.pageX + 10) + "px")
+                   .style("top", (event.pageY - 10) + "px");
+        })
+        .on("mouseout", function() {
+            tooltip.style("opacity", 0);
+        });
+
+        // Create legend
+        var legend = svg.append("g")
+            .attr("transform", "translate(-90,10)");
+
+        // color.range().forEach((d, i) => {
+        //     legend.append("rect")
+        //           .attr("x", 0)
+        //           .attr("y", i * 20)
+        //           .attr("width", 20)
+        //           .attr("height", 20)
+        //           .style("fill", d);
+
+        //     legend.append("text")
+        //           .attr("x", 30)
+        //           .attr("y", i * 20 + 10)
+        //           .attr("dy", "0.35em")
+        //           .style("text-anchor", "start")
+        //           .text(color.domain()[i]);
+        // });
+    </script>
+</body>
+</html>

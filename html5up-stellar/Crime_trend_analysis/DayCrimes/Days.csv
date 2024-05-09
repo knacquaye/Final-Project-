@@ -1,6 +1,36 @@
-Type,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday
-Larceny Theft,35269,33416,36135,34894,40116,37982,35118
-Other Miscellaneous,7800,7898,8868,8307,8357,7847,7620
-Malicious Mischief,7979,7721,8098,7735,8725,8477,7905
-Assault,7067,6894,7078,7151,7597,7866,7445 
-Non-Criminal,7024,6986,7467,7203,7174,6569,6555
+day,type,value
+Monday,Larceny Theft,35269
+Tuesday,Larceny Theft,33416
+Wednesday,Larceny Theft,36135
+Thursday,Larceny Theft,34894
+Friday,Larceny Theft,40116
+Saturday,Larceny Theft,37982
+Sunday,Larceny Theft,35118
+Monday,Other Miscellaneous,7800
+Tuesday,Other Miscellaneous,7898
+Wednesday,Other Miscellaneous,8868
+Thursday,Other Miscellaneous,8307
+Friday,Other Miscellaneous,8357
+Saturday,Other Miscellaneous,7847
+Sunday,Other Miscellaneous,7620
+Monday,Malicious Mischief,7979
+Tuesday,Malicious Mischief,7721
+Wednesday,Malicious Mischief,8098
+Thursday,Malicious Mischief,7735
+Friday,Malicious Mischief,8725
+Saturday,Malicious Mischief,8477
+Sunday,Malicious Mischief,7905
+Monday,Assault,7067
+Tuesday,Assault,6894
+Wednesday,Assault,7078
+Thursday,Assault,7151
+Friday,Assault,7597
+Saturday,Assault,7866
+Sunday,Assault,7445
+Monday,Non-Criminal,7024
+Tuesday,Non-Criminal,6986
+Wednesday,Non-Criminal,7467
+Thursday,Non-Criminal,7203
+Friday,Non-Criminal,7174
+Saturday,Non-Criminal,6569
+Sunday,Non-Criminal,6555
