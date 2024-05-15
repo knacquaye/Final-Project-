@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crime Heatmap</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        .tooltip {
+            position: absolute;
+            opacity: 0;
+            background-color: white;
+            border: solid 1px #000;
+            padding: 5px;
+            border-radius: 5px;
+            pointer-events: none;
+        }
+        body {
+            font-family: "Helvetica", sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        #heatmap-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .legend {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-left: 20px;
+            margin-top: -330px; 
+        }
+        .legend rect {
+            margin-right: 5px;
+        }
+        .legend .tick text {
+            font-size: 14px; 
+        }
+        .label-margin {
+            margin-right: 10px; 
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <label for="crimeTypeSelector" class="label-margin">Select Crime Type:</label>
+        <select id="crimeTypeSelector"></select>
+    </div>
+    <div id="heatmap-container">
+        <div id="heatmap"></div>
+        <div class="legend" id="legend"></div>
+    </div>
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // Load the data from a CSV file
+        d3.csv('Days.csv').then(function(data) {
+            // Structure the data by crime type
+            const dataByType = {};
+            data.forEach(d => {
+                if (!dataByType[d.type]) {
+                    dataByType[d.type] = [];
+                }
+                dataByType[d.type].push({ day: d.day, value: +d.value });
+            });
+
+            // Setup the SVG dimensions
+            const width = 850, height = 150; 
+            const svg = d3.select("#heatmap").append("svg")
+                .attr("width", width)
+                .attr("height", 500);
+
+            // Setup the xScale for days
+            const xScale = d3.scaleBand()
+                .domain(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+                .range([0, width])
+                .padding(0.05);
+
+            // Initial update with the first crime type available
+            updateHeatmap(Object.keys(dataByType)[0]);
+
+            // Populate the dropdown for crime type selection
+            const selector = d3.select("#crimeTypeSelector");
+            selector.selectAll("option")
+                .data(Object.keys(dataByType))
+                .enter().append("option")
+                .text(d => d)
+                .attr("value", d => d);
+
+            selector.on("change", function(event) {
+                updateHeatmap(this.value);
+            });
+
+            // Function to update the heatmap based on the selected crime type
+            function updateHeatmap(crimeType) {
+                const data = dataByType[crimeType];
+                const maxValue = d3.max(data, d => d.value);
+                const colorScale = d3.scaleSequential(d3.interpolateCubehelixLong.gamma(3)("purple", "orange"))
+                    .domain([0, maxValue]);
+
+                const bars = svg.selectAll("rect")
+                    .data(data, d => d.day);
+
+                // Enter and update existing bars
+                bars.enter().append("rect")
+                    .merge(bars)
+                    .attr("x", d => xScale(d.day))
+                    .attr("y", 0)
+                    .attr("width", xScale.bandwidth())
+                    .attr("height", height - 20) 
+                    .attr("fill", d => colorScale(d.value))
+                    .attr("stroke", "none") 
+                    .attr("stroke-width", 0) 
+                    .on("mouseover", function(event, d) {
+                        d3.select(this)
+                            .attr("stroke", "black") // Apply black stroke on hover
+                            .attr("stroke-width", 2.5); 
+
+                        d3.select("#tooltip")
+                            .style("opacity", 1)
+                            .html(`Type: ${crimeType}<br>Day: ${d.day}<br>Crimes: ${d.value}`)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 10) + "px");
+                    })
+                    .on("mousemove", function(event) {
+                        d3.select("#tooltip")
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 10) + "px");
+                    })
+                    .on("mouseout", function() {
+                        d3.select(this)
+                            .attr("stroke", "none") // Remove stroke on mouse out
+                            .attr("stroke-width", 0); 
+
+                        d3.select("#tooltip")
+                            .style("opacity", 0);
+                    });
+
+                // Remove bars that are no longer needed
+                bars.exit().remove();
+
+                // Update day labels
+                const labels = svg.selectAll("text")
+                    .data(data, d => d.day);
+
+                labels.enter().append("text")
+                    .merge(labels)
+                    .attr("x", d => xScale(d.day) + xScale.bandwidth() / 2)
+                    .attr("y", height - 5) // Position labels at the bottom
+                    .attr("text-anchor", "middle")
+                    .text(d => d.day);
+
+                labels.exit().remove();
+
+                // legend
+                const legendWidth = 20, legendHeight = 150; 
+                d3.select("#legend").select("svg").remove(); // Clear previous legend
+                const legendSvg = d3.select("#legend").append("svg")
+                    .attr("width", legendWidth + 50) 
+                    .attr("height", legendHeight + 50); 
+
+                // gradient for the legend
+                const gradient = legendSvg.append("defs").append("linearGradient")
+                    .attr("id", "legendGradient")
+                    .attr("x1", "50%")
+                    .attr("x2", "50%")
+                    .attr("y1", "100%")
+                    .attr("y2", "0%");
+
+                gradient.append("stop")
+                    .attr("offset", "0%")
+                    .attr("stop-color", "green"); // Bottom color
+                gradient.append("stop")
+                    .attr("offset", "100%")
+                    .attr("stop-color", colorScale(maxValue)); // Top color
+
+                // Draw the legend rectangle
+                legendSvg.append("rect")
+                    .attr("x", 10)
+                    .attr("y", 10)
+                    .attr("width", legendWidth)
+                    .attr("height", legendHeight)
+                    .style("fill", "url(#legendGradient)");
+
+                // scale and axis for the legend
+                const legendScale = d3.scaleLinear()
+                    .domain([0, maxValue])
+                    .range([legendHeight, 0]);
+
+                const legendAxis = d3.axisRight(legendScale)
+                    .ticks(5.5)
+                    .tickFormat(d => `${d / 1000}k`) // Format ticks with 'k' 
+                    .tickSize(0); 
+
+                // Append the legend axis
+                legendSvg.append("g")
+                    .attr("class", "legend axis")
+                    .attr("transform", `translate(${legendWidth + 15}, 10)`)
+                    .call(legendAxis)
+                    .select(".domain").remove(); // Remove the axis line
+            }
+        });
+    </script>
+</body>
+</html>

@@ -8,16 +8,13 @@
     <style>
         .tooltip {
             position: absolute;
-            text-align: center;
-            width: auto;
-            height: auto;
-            padding: 10px;
-            font: 12px sans-serif bold;
-            background: lightsteelblue;
-            border: 0px;
-            border-radius: 8px;
-            pointer-events: none;
             opacity: 0;
+            background-color: white;
+            border: solid 1px #000;
+            padding: 5px;
+            border-radius: 5px;
+            pointer-events: none;
+            font-family: Arial, Helvetica, sans-serif;
         }
     </style>
 </head>
@@ -25,11 +22,13 @@
 
 <div id="chart"></div>
 <script>
-  // Set dimensions and margins
+
+  // Set the dimensions and margins of the chart
   const margin = { top: 40, right: 30, bottom: 60, left: 150 },
         width = 900 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
 
+  // Append the svg object to the div with id "chart"
   const svg = d3.select("#chart")
     .append("svg")
       .attr("width", width + margin.left + margin.right)
@@ -37,20 +36,21 @@
     .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
+  // Load data from the CSV file
   d3.csv("Top5Crimes.csv").then(function(data) {
-      // X axis
+      // Define the X axis
       const x = d3.scaleLinear()
-        .domain([0, 260000])
+        .domain([0, 260000])  // Adjust domain as needed
         .range([0, width]);
 
-
+      // Append the X axis to the SVG
       svg.append("g")
         .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x).tickFormat(d => `${d/1000}k`))
-        .style("font-style", "Calibri")
+        .call(d3.axisBottom(x).tickFormat(d => `${d/1000}k`))  // Format ticks with 'k'
+        .style("font-family", "Helvetica")
         .style("font-size", "14px");
 
-      // Add x-axis title
+      // Add X axis title
       svg.append("text")
               .attr("text-anchor", "middle")
               .attr("x", width / 2)
@@ -59,40 +59,45 @@
               .style("font-family", "Helvetica")
               .text("Number Of Crimes");
 
-      // Y axis
+      // Define the Y axis
       const y = d3.scaleBand()
         .range([0, height])
-        .domain(data.map(d => d.Type_Of_Crime))
-        .padding(0.4);
+        .domain(data.map(d => d.Type_Of_Crime))  // Use Type_Of_Crime for the Y axis
+        .padding(0.4);  // Padding between bars
 
+      // Append the Y axis to the SVG
       svg.append("g")
         .call(d3.axisLeft(y))
-        .style("font-style", "Helvetica")
+        .style("font-family", "Helvetica")
         .style("font-size", "14px")
-        .select(".domain").remove();
+        .select(".domain").remove();  // Remove the Y axis line
 
-      // Tooltip
+      // Create the tooltip div
       const tooltip = d3.select("#chart")
         .append("div")
         .style("opacity", 0)
         .attr("class", "tooltip");
 
-        const mouseover = function(event, d, i) {
+      // Mouseover event handler
+      const mouseover = function(event, d, i) {
         tooltip.style("opacity", 1);
         d3.select(this).attr("fill", "red");  // Change to red on mouseover
-    };
+      };
 
-    const mousemove = function(event, d) {
+      // Mousemove event handler
+      const mousemove = function(event, d) {
         tooltip.html(d.Type_Of_Crime + " : " + d3.format(",")(d.Count))
             .style("left", (event.x + 10) + "px")
             .style("top", (event.y - 10) + "px"); 
-    };
-    const mouseleave = function(event, d, i) {
-      d3.select(this).attr("fill", i === 0 ? "purple" : "#d7b5d8");
-        tooltip.style("opacity", 0);
-    };
+      };
 
-      // Bars with transition
+      // Mouseleave event handler
+      const mouseleave = function(event, d, i) {
+        d3.select(this).attr("fill", i === 0 ? "purple" : "#d7b5d8");
+        tooltip.style("opacity", 0);
+      };
+
+      // Append bars to the chart with transition
       svg.selectAll("mybar")
       .data(data)
       .join("rect")
@@ -100,13 +105,13 @@
         .attr("y", d => y(d.Type_Of_Crime))
         .attr("width", 0)  // Initialize width at 0 for animation
         .attr("height", y.bandwidth())
-        .attr("fill", (d, i) => i === 0 ? "#7a0177" : "#d7b5d8")
+        .attr("fill", (d, i) => i === 0 ? "#7a0177" : "#d7b5d8")  // Color bars
         .on("mouseover", mouseover)
         .on("mousemove", mousemove)
         .on("mouseleave", mouseleave)
-      .transition()  
-        .duration(3000)  
-        .attr("width", d => x(d.Count));  // Anim  // Animate to the final width based on data
+      .transition()  // Animate bars
+        .duration(3000)  // Duration of the animation
+        .attr("width", d => x(d.Count));  // Set final width based on data
   });
 </script>
 

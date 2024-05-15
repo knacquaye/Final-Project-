@@ -7,26 +7,23 @@
     <style>
         .tooltip {
             position: absolute;
-            text-align: center;
-            width: auto;
-            height: auto;
-            padding: 8px;
-            font: 12px sans-serif;
-            background: lightsteelblue;
-            border: 0px;
-            border-radius: 8px;
-            pointer-events: none;
             opacity: 0;
+            background-color: white;
+            border: solid 1px #000;
+            padding: 5px;
+            border-radius: 5px;
+            pointer-events: none;
+            font-family: Arial, Helvetica, sans-serif;
         }
         .y.axis-label {
-        fill: grey; /* Color of the text */
-        font-size: 18px; /* Size of the font */
-        font-family: 'Helvetica', sans-serif; /* Font family */
+        fill: grey; 
+        font-size: 18px; 
+        font-family: 'Helvetica', sans-serif; 
         }
         .x.axis-label {
-        fill: grey; /* Color of the text */
-        font-size: 18px; /* Size of the font */
-        font-family: 'Helvetica', sans-serif; /* Font family */
+        fill: grey; 
+        font-size: 18px; 
+        font-family: 'Helvetica', sans-serif; 
         }
     </style>
 </head>
@@ -61,54 +58,46 @@
             svg.append("g")
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(x))
-                // .selectAll("path, line")
-                // .style("stroke-width", "1")
                 .selectAll("text")
-                .style("font-style", "Helvetica")
+                .style("font-family", "Helvetica")
                 .style("font-size", "14px");
 
-            // Add x-axis label
+            // x-axis label
             svg.append("text")
                 .attr("class", "x axis-label")
                 .attr("text-anchor", "middle")
-                .attr("x", width / 2) // Center the label by setting x to half of width
-                .attr("y", height + 50) // Position below the x-axis, adjust spacing as needed
-                .text("Year"); // The text of your label
+                .attr("x", width / 2) // Center the label 
+                .attr("y", height + 50) // Position below the x-axis
+                .text("Year"); 
 
 
-            // svg.append("g")
-            //     .call(d3.axisLeft(y))
-            //     .style("stroke-width", "1")
-            //     .style("font-size", "15px");
-
-            // Define the y-axis with grid lines
+            
+            // Y-axis 
             const yAxis = d3.axisLeft(y)
-                .tickSize(-width)  // Extend the ticks across the full width of the graph
-                .tickPadding(10);  // Adjust padding to ensure labels don't collide with the grid lines
+                .tickSize(-width)  
+                .tickPadding(10);
 
-            // Add the y-axis with the grid lines
+            // the y-axis with the grid lines
              svg.append("g")
                 .attr("class", "y axis")
                 .call(yAxis)
                 .selectAll("text")
-                .style("font-style", "Helvetica")
+                .style("font-familt", "Helvetica")
                 .style("font-size", "14px");
 
-            // Add y-axis label
+            // y-axis label
             svg.append("text")
                 .attr("class", "y axis-label")
                 .attr("text-anchor", "middle")
-                .attr("y", -100) // Position the y-axis label correctly
-                .attr("x", -height / 2) // Center the label by setting x to half of height
+                .attr("y", -100) 
+                .attr("x", -height / 2) // Center the label 
                 .attr("dy", ".75em")
-                .attr("transform", "rotate(-90)") // Rotate the label by -90 degrees
-                // .style("font-style", "Arial")
-                // .style("font-size", "19px")
-                .text("Number of Crimes"); // The text of your label
+                .attr("transform", "rotate(-90)")
+                .text("Number of Crimes"); 
 
-            // Optionally, customize the grid line style
+            //grid line style
                 svg.selectAll(".y.axis .tick line")
-                .attr("stroke", "#ddd")  // Set the color of the grid lines
+                .attr("stroke", "#ddd")  //color of the grid lines
                 svg.select(".y.axis .domain")
                 .attr("stroke-width", 0);
 
@@ -118,7 +107,7 @@
                 .y(d => y(d.Number_of_crimes));
 
 
-            // Find the index where the year is 2023 to create a break
+            // index where the year is 2023 to create a break
              const breakIndex = data.findIndex(d => d.Year === "2023");
 
             // Draw the line up to 2023
@@ -136,14 +125,14 @@
                 svg.append("path")
                     .datum(data.slice(breakIndex, breakIndex + 2))  // Include just 2023 and 2024
                     .attr("fill", "none")
-                    .attr("stroke", "#8856a7")  // Different color to highlight, or use same 'steelblue' as needed
+                    .attr("stroke", "#8856a7")  
                     .attr("stroke-width", 2)
                     .attr("stroke-dasharray", "5,5")
                     .attr("d", line);
             }
 
      
-            // Tooltip element
+            // Tooltip 
             const tooltip = d3.select(".tooltip");
             // Circles for tooltip triggers
             svg.selectAll(".dot")
@@ -171,6 +160,17 @@
                        
 
                 });
+            //  Annotation for the COVID year (2020)
+                svg.append("text")
+                    .attr("x", x("2020") + x.bandwidth() / 2 - 120)  
+                    .attr("y", y(data.find(d => d.Year === "2020").Number_of_crimes)) 
+                    .attr("dy", "-10") // Shift slightly above the point
+                    .attr("text-anchor", "middle") // Center the text 
+                    .style("font-family", "Helvetica")
+                    .style("font-size", "16px")
+                    .style("fill", "grey") 
+                    .text("COVID-19 Impact");
+
                 
 
         });
